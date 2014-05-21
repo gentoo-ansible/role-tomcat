@@ -1,0 +1,75 @@
+---
+- name: add overlay cvut
+  layman: >
+    name=cvut
+    list_url=http://raw.github.com/cvut/gentoo-overlay/master/overlay.xml
+  tags: packages
+
+- name: install packages
+  portage: package={{ item }}
+  with_items:
+    - "www-servers/tomcat:{{ tomcat_slot }}"
+    - dev-java/tomcat-scripts
+    - dev-java/tomcat-native
+  tags: packages
+
+- name: create group
+  group: >
+    name={{ tomcat_group }}
+    system=yes
+  tags: accounts
+
+- name: create user
+  user: >
+    name={{ tomcat_user }}
+    group={{ tomcat_group }}
+    home={{ tomcat_base_dir }}
+    createhome=no
+    shell=/sbin/nologin
+    system=yes
+  tags: accounts
+
+- name: create base directories
+  file: >
+    path={{ item.path }}
+    owner={{ item.owner | default(tomcat_user) }}
+    group={{ item.group | default(tomcat_group) }}
+    mode={{ item.mode | default('0755') }}
+    state=directory
+  with_items:
+    - { path: "{{ tomcat_base_dir }}" }
+    - { path: "{{ tomcat_temp_dir }}", mode: '0750' }
+    - { path: "{{ tomcat_work_dir }}", mode: '0700' }
+    - { path: "{{ tomcat_webapps_dir }}" }
+    - { path: "{{ tomcat_logs_dir }}" }
+    - { path: "{{ tomcat_conf_dir }}" }
+    - { path: "{{ tomcat_conf_ctx_dir }}", owner: root, mode: '0750' }
+
+- name: create directories for "shared" classloader
+  file: >
+    path={{ item.path }}
+    owner={{ item.owner | default(tomcat_user) }}
+    group={{ item.group | default(tomcat_group) }}
+    mode=0755
+    state=directory
+  with_items:
+    - { path: "{{ tomcat_shared_dir }}", owner: root, group: root }
+    - { path: "{{ tomcat_shared_dir }}/classes" }
+    - { path: "{{ tomcat_shared_dir }}/lib" }
+  when: tomcat_shared_loader_enabled | bool
+
+- name: make symlinks
+  file: >
+    src={{ item.src }}
+    dest={{ item.dest }}
+    state=link
+    force=yes
+  with_items:
+    - { src: "{{ tomcat_conf_dir }}", dest: "{{ tomcat_base_dir }}/conf" }
+    - { src: "{{ tomcat_logs_dir }}", dest: "{{ tomcat_base_dir }}/logs" }
+
+- name: install init script
+  template: >
+    src=runscript.j2
+    dest=/etc/init.d/{{ tomcat_name }}
+    owner=root group=root mode=0755

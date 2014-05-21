@@ -1,0 +1,24 @@
+---
+# Defaults for JNDI DataSource that will be merged to 'tomcat_global_resources'
+# with type 'javax.sql.DataSource'.
+tomcat_datasource_defaults:
+  name: jdbc/DataSource
+  type: javax.sql.DataSource
+  auth: Container
+  factory: org.apache.tomcat.jdbc.pool.DataSourceFactory
+  driverClassName: org.postgresql.Driver
+  minIdle: 1
+  maxIdle: 6
+  maxActive: 20
+  initialSize: 2
+  maxWait: 10000
+  suspectTimeout: 120
+  removeAbandonedTimeout: 3600
+  timeBetweenEvictionRunsMillis: 30000
+  testOnBorrow: 'true'
+  validationQuery: select 1
+  validationInterval: 10000
+  useEquals: 'false'
+  jdbcInterceptors: ConnectionState
+  username: "{{ tomcat_name }}"
+  url: "jdbc:postgresql://localhost:5432/{{ tomcat_name }}"

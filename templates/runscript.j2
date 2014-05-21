@@ -1,0 +1,19 @@
+#!/sbin/runscript
+# Copyright 1999-2014 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+source /usr/share/tomcat-scripts/runscript.sh
+
+catalina_home={{ tomcat_home_dir }}
+catalina_base={{ tomcat_base_dir }}
+catalina_temp={{ tomcat_temp_dir }}
+
+tomcat_logging_conf="${catalina_base}/conf/tomcat-logging.properties"
+
+{% if tomcat_rc_depend %}
+depend() {
+{% for k, v in tomcat_rc_depend.items() %}
+	{{ k }} {{ v if v is string else v | join(' ') }}
+{% endfor %}
+}
+{% endif %}

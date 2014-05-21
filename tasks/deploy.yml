@@ -1,0 +1,29 @@
+---
+- name: stop tomcat
+  service: >
+    name={{ tomcat_name }}
+    state=stopped
+
+- name: cleanup work and temp dirs
+  file: >
+    path={{ item }}
+    state=absent
+  with_fileglob:
+    - "{{ tomcat_work_dir }}/*"
+    - "{{ tomcat_temp_dir }}/*"
+  tags: cleanup
+
+- name: download and deploy WARs
+  get_url: >
+    url={{ item.url }}
+    dest={{ tomcat_webapps_dir }}/{{ item.name }}.war
+    owner={{ tomcat_user }}
+    group={{ tomcat_group }}
+    mode=0644
+  with_items: "tomcat_deploys | select('mapping') | selectattr('url', 'defined') | list"
+
+- name: copy local unpacked WARs
+  shell: >
+    cp {{ item.local_src }} {{ tomcat_webapps_dir }}/{{ item.name }};
+    chown -R {{ tomcat_user }}:{{ tomcat_group }} {{ tomcat_webapps_dir }}/{{ item.name }}
+  with_items: "tomcat_deploys | select('mapping') | selectattr('local_src', 'defined') | list"

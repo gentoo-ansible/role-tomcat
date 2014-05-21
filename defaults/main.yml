@@ -1,0 +1,132 @@
+---
+# Tomcat package slot.
+tomcat_slot: 7
+
+# Name of this Tomcat instance.
+tomcat_name: tomcat
+
+# The user that will be owner of the webapp's files and will run the Tomcat
+# instance. It will be created if no exists yet.
+tomcat_user: "{{ tomcat_name }}"
+
+# The group to run Tomcat and own files.
+tomcat_group: "{{ tomcat_user }}"
+
+# The service dependencies; hash with any of the keys: need, use, after,
+# before, provide. Values must be a list of services.
+tomcat_rc_depend: {}
+
+#
+# Directories
+#
+
+# Directory path where are Tomcat shared files installed (i.e. $CATALINA_HOME).
+tomcat_home_dir: "/usr/share/tomcat-{{ tomcat_slot }}"
+
+# Path of the instance base directory (i.e. $CATALINA_BASE).
+tomcat_base_dir: "/opt/{{ tomcat_name }}"
+
+# Path of the temporary directory.
+tomcat_temp_dir: "{{ tomcat_base_dir }}/temp"
+
+# Path of the "work" directory to store compiled JSP pages etc.
+tomcat_work_dir: "{{ tomcat_base_dir }}/work"
+
+# Path of the directory to deploy web application(s).
+tomcat_webapps_dir: "{{ tomcat_base_dir }}/webapps"
+
+# Path of the directory to store logs.
+tomcat_logs_dir: "/var/log/{{ tomcat_name }}"
+
+# Path of the directory to store configuration files.
+tomcat_conf_dir: "/etc/{{ tomcat_name }}"
+
+# Path of the directory for webapps' context XML.
+tomcat_conf_ctx_dir: "{{ tomcat_conf_dir }}/Catalina/localhost"
+
+# Path of the "shared" classloader.
+tomcat_shared_dir: "{{ tomcat_base_dir }}/shared"
+
+#
+# JVM tuning
+#
+
+# Size of the heap in megabytes. This sets parameters -Xms and -Xmx.
+tomcat_heap_size: 256
+
+# Size of the Permanent Generation space in megabytes. This sets parameters
+# -XX:PermSize and -XX:MaxPermSize.
+tomcat_perm_size: 64
+
+# List of additional options to pass to the JVM.
+tomcat_java_opts:
+  - '-XX:+UseG1GC'
+  - '-XX:MaxGCPauseMillis=100'
+
+#
+# Connectors
+#
+
+# Port for the default HTTP/1.1 connector. Used only when {{tomcat_connectors}}
+# is not changed.
+tomcat_port: 8080
+
+# List of Connectors with attributes. It may contain any attribute valid for
+# the specific Connector type.
+# See http://tomcat.apache.org/tomcat-7.0-doc/config/http.html and ajp.html
+# for a list of available attributes.
+# Do not define URIEncoding there, it’s implicitly set to "UTF-8".
+tomcat_connectors:
+  - port: "{{ tomcat_port }}"
+    protocol: HTTP/1.1
+    connectionTimeout: 2000
+    acceptorThreadCount: 2
+
+#
+# JMX/RMI
+#
+
+# Whether to configure JMX.
+tomcat_jmx_enabled: false
+
+# Path of the RMI/JMX access file.
+tomcat_jmx_access_file: "{{ tomcat_conf_dir }}/jmxremote.access"
+
+# Path of the RMI/JMX password file.
+tomcat_jmx_passwd_file: "{{ tomcat_conf_dir }}/jmxremote.passwd"
+
+# The JMX user with readwrite access to declare.
+tomcat_jmx_user: tomcat
+
+# Password of the JMX user.
+tomcat_jmx_password: top-secret
+
+# Port to be used by the JMX/RMI registry for the Platform MBeans.
+tomcat_jmx_registry_port: 8001
+
+# Port to be used by the Platform JMX/RMI server.
+tomcat_jmx_server_port: 8002
+
+#
+# Others
+#
+
+# Whether to log requests processed by Tomcat.
+# Logs will be saved to {{tomcat_logs_dir}}/tomcat_access.YYYY-MM-DD.log
+tomcat_access_log_enabled: false
+
+# Whether to enable the "shared" classloader with paths
+# ${catalina.base}/shared/classes and ${catalina.base}/shared/lib/*.jar.
+tomcat_shared_loader_enabled: false
+
+# List of additional packages to put on the default classpath. The extra jars
+# listed here will be visible to webapps.
+# Example:
+#   tomcat_extra_jars="jakarta-jstl,jdbc-postgresql"
+tomcat_extra_jars: []
+
+# List of Global Resources with attributes. It may contain any attribute valid
+# for the Resource type. It also creates ResourceLink in context.xml. See
+# http://tomcat.apache.org/tomcat-7.0-doc/config/globalresources.html for a
+# list of available attributes.
+tomcat_global_resources: []

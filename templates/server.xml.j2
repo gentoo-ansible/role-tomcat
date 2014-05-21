@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- {{ ansible_managed }} -->
+
+<Server port="-1" shutdown="disabled">
+
+    <!--APR library loader -->
+    <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="off" />
+
+    <!--Initialize Jasper prior to webapps are loaded. -->
+    <Listener className="org.apache.catalina.core.JasperListener" />
+
+    <!-- Prevent memory leaks due to use of particular java/javax APIs. -->
+    <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+    <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+    <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+{% if tomcat_jmx_enabled | bool %}
+    <!-- Fix ports used by the JMX/RMI Server (for tools like jconsole, VisualVM,...) -->
+    <Listener className="org.apache.catalina.mbeans.JmxRemoteLifecycleListener"
+              rmiRegistryPortPlatform="{{ tomcat_jmx_registry_port }}"
+              rmiServerPortPlatform="{{ tomcat_jmx_server_port }}" />
+
+{% endif %}
+{% if tomcat_global_resources %}
+    <GlobalNamingResources>
+{% for res in tomcat_global_resources %}
+{% set merged = tomcat_datasource_defaults | hash_merge(res) if res.get('type', '') == 'javax.sql.DataSource' else res %}
+        <Resource {% for (k, v) in merged.iteritems() -%}
+                  {{ k }}="{{ v }}"
+                  {% endfor %} />
+
+{% endfor %}
+    </GlobalNamingResources>
+
+{% endif %}
+    <!-- "Service" is a collection of one or more "Connectors" that share a single "Container". -->
+    <Service name="Catalina">
+
+{% for conn in tomcat_connectors %}
+        <Connector {% for (k, v) in conn.iteritems() if not 'URIEncoding' in conn -%}
+                   {{ k }}="{{ v }}"
+                   {% endfor -%}
+                   URIEncoding="UTF-8" />
+
+{% endfor %}
+        <Engine name="Catalina"
+                defaultHost="localhost">
+
+            <Host name="localhost"
+                  appBase="webapps"
+                  unpackWARs="true"
+                  autoDeploy="true" />
+
+            <!-- Replace request's remote IP address and protocol with values
+                 resented by a proxy via a request headers. -->
+            <Valve className="org.apache.catalina.valves.RemoteIpValve"
+                    remoteIpHeader="X-Forwarded-For"
+                    protocolHeader="X-Forwarded-Proto" />
+
+{% if tomcat_access_log_enabled | bool %}
+            <Valve className="org.apache.catalina.valves.AccessLogValve"
+                    directory="{{ tomcat_logs_dir }}"
+                    prefix="tomcat_access." suffix=".log"
+                    pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+{% endif %}
+        </Engine>
+    </Service>
+</Server>
