@@ -111,6 +111,9 @@ tomcat_jmx_server_port: 8002
 # Others
 #
 
+# Whether to enable session persistence across Tomcat restarts.
+tomcat_session_persistence_enabled: false
+
 # Whether to log requests processed by Tomcat.
 # Logs will be saved to {{tomcat_logs_dir}}/tomcat_access.YYYY-MM-DD.log
 tomcat_access_log_enabled: false

@@ -10,5 +10,9 @@
 {% for res in tomcat_global_resources if res.get('type', '') == 'javax.sql.DataSource' %}
     <ResourceLink global="{{ res.name }}" name="{{ res.name }}" type="{{ res.type }}" />
 {% endfor %}
+{% if not tomcat_session_persistence_enabled | bool %}
 
+    <!-- Disable session persistence across Tomcat restarts -->
+    <Manager pathname="" />
+{% endif %}
 </Context>
